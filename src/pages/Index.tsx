@@ -156,7 +156,7 @@ const Index = () => {
           onSelect={handleSelect}
           onNew={handleNew}
           onDelete={handleDelete}
-          loading={loadingChats}
+          
         />
         <div className="flex flex-1 flex-col">
           <header className="flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
