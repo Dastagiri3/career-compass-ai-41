@@ -2,104 +2,133 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Cloud White palette */
+    --background: 220 33% 99%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 217 91% 70%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 215 25% 94%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 215 25% 95%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 217 91% 96%;
+    --accent-foreground: 217 91% 35%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 215 28% 90%;
+    --input: 215 28% 90%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 33% 99%), hsl(215 25% 96%));
+    --shadow-soft: 0 1px 3px 0 hsl(215 25% 27% / 0.06), 0 1px 2px 0 hsl(215 25% 27% / 0.04);
+    --shadow-elegant: 0 10px 30px -12px hsl(217 91% 60% / 0.18);
+    --shadow-glow: 0 0 0 1px hsl(217 91% 60% / 0.1), 0 8px 24px -8px hsl(217 91% 60% / 0.25);
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 220 33% 99%;
+    --sidebar-foreground: 222 25% 25%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 91% 96%;
+    --sidebar-accent-foreground: 217 91% 35%;
+    --sidebar-border: 215 28% 92%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 47% 6%;
     --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
+    --card: 222 47% 8%;
     --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 47% 8%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 32% 17%;
     --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
+    --muted: 217 32% 14%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 32% 17%;
     --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62% 45%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
+    --ring: 217 91% 60%;
+    --sidebar-background: 222 47% 7%;
+    --sidebar-foreground: 210 30% 90%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 217 32% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 32% 17%;
+    --sidebar-ring: 217 91% 60%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
+  * { @apply border-border; }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
   }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sora', system-ui, sans-serif;
+    @apply tracking-tight;
+  }
+}
+
+@layer components {
+  .prose-chat {
+    @apply text-sm leading-relaxed;
+  }
+  .prose-chat h1, .prose-chat h2, .prose-chat h3 {
+    @apply font-semibold mt-4 mb-2 text-foreground;
+    font-family: 'Sora', sans-serif;
+  }
+  .prose-chat h2 { @apply text-base; }
+  .prose-chat h3 { @apply text-sm; }
+  .prose-chat p { @apply my-2; }
+  .prose-chat ul { @apply list-disc pl-5 my-2 space-y-1; }
+  .prose-chat ol { @apply list-decimal pl-5 my-2 space-y-1; }
+  .prose-chat strong { @apply font-semibold text-foreground; }
+  .prose-chat code {
+    @apply bg-muted px-1.5 py-0.5 rounded text-xs font-mono;
+  }
+  .prose-chat pre {
+    @apply bg-muted p-3 rounded-lg overflow-x-auto my-3;
+  }
+  .prose-chat pre code { @apply bg-transparent p-0; }
+  .prose-chat a { @apply text-primary underline underline-offset-2; }
+
+  .typing-dot {
+    @apply inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground;
+    animation: typing 1.2s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+}
+
+@keyframes typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
 }
