@@ -1,4 +1,4 @@
-import { Briefcase, Plus, MessageSquare, Sparkles, FileText, Trash2 } from "lucide-react";
+import { Briefcase, Plus, MessageSquare, Sparkles, FileText, Trash2, LogIn, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +14,41 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+
+function UserPanel() {
+  const { user, signInWithGoogle, logout, loading } = useAuth();
+  if (loading) {
+    return <div className="px-2 py-2 text-xs text-muted-foreground">Loading…</div>;
+  }
+  if (!user) {
+    return (
+      <div className="p-2">
+        <Button onClick={signInWithGoogle} variant="outline" size="sm" className="w-full justify-start gap-2">
+          <LogIn className="h-4 w-4" /> Sign in with Google
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 p-2">
+      {user.photoURL ? (
+        <img src={user.photoURL} alt="" className="h-8 w-8 rounded-full" />
+      ) : (
+        <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
+          {user.displayName?.[0] ?? user.email?.[0] ?? "U"}
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="truncate text-xs font-medium">{user.displayName ?? "User"}</div>
+        <div className="truncate text-[10px] text-muted-foreground">{user.email}</div>
+      </div>
+      <button onClick={logout} className="text-muted-foreground hover:text-destructive" aria-label="Sign out">
+        <LogOut className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
 
 export type Conversation = {
   id: string;
@@ -126,11 +161,7 @@ export function JDSidebar({ conversations, activeId, onSelect, onNew, onDelete }
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        {!collapsed && (
-          <div className="px-2 py-2 text-xs text-muted-foreground">
-            Powered by Lovable AI
-          </div>
-        )}
+        {!collapsed && <UserPanel />}
       </SidebarFooter>
     </Sidebar>
   );
