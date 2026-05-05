@@ -287,18 +287,68 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
 
       <div className="border-t border-border bg-background/80 backdrop-blur">
         <div className="mx-auto max-w-3xl p-4">
+          {attachments.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {attachments.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1 text-xs shadow-[var(--shadow-soft)]"
+                >
+                  {a.kind === "image" && a.dataUrl ? (
+                    <img src={a.dataUrl} alt={a.name} className="h-7 w-7 rounded object-cover" />
+                  ) : a.kind === "pdf" ? (
+                    <FileType2 className="h-4 w-4 text-primary" />
+                  ) : (
+                    <FileText className="h-4 w-4 text-primary" />
+                  )}
+                  <span className="max-w-[160px] truncate font-medium">{a.name}</span>
+                  <button
+                    onClick={() => removeAttachment(a.id)}
+                    className="ml-1 rounded-full p-0.5 hover:bg-muted"
+                    aria-label="Remove attachment"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-card p-2 shadow-[var(--shadow-soft)] focus-within:border-primary/40 focus-within:shadow-[var(--shadow-glow)] transition-all">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,application/pdf,image/*,.txt,.md,.json,.csv,text/*"
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isStreaming || isProcessingFile}
+              className="h-10 w-10 shrink-0 rounded-xl text-muted-foreground hover:text-primary"
+              title="Attach JD (PDF, image, or text)"
+              aria-label="Attach file"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Paste a job description or ask a career question…"
+              placeholder={
+                isProcessingFile
+                  ? "Reading file…"
+                  : "Paste a JD, attach a file, or ask a career question…"
+              }
               className="min-h-[52px] max-h-48 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
               disabled={isStreaming}
             />
             <Button
               onClick={() => send(input)}
-              disabled={!input.trim() || isStreaming}
+              disabled={(!input.trim() && attachments.length === 0) || isStreaming || isProcessingFile}
               size="icon"
               className="h-10 w-10 shrink-0 rounded-xl"
             >
