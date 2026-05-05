@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Send, Briefcase, FileText, Sparkles, Target, Bot, User } from "lucide-react";
+import { Send, Briefcase, FileText, Sparkles, Target, Bot, User, Paperclip, X, FileType2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { extractPdfText, fileToDataUrl, readTextFile, type AttachedFile } from "@/lib/extractFile";
 
 export type Msg = { role: "user" | "assistant"; content: string };
 
@@ -43,21 +44,99 @@ const examples = [
 export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Props) {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [attachments, setAttachments] = useState<AttachedFile[]>([]);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || !files.length) return;
+    setIsProcessingFile(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 20 * 1024 * 1024) {
+          toast.error(`${file.name} is too large (max 20MB).`);
+          continue;
+        }
+        const id = Math.random().toString(36).slice(2);
+        try {
+          if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+            const text = await extractPdfText(file);
+            setAttachments((p) => [...p, { id, name: file.name, kind: "pdf", text }]);
+          } else if (file.type.startsWith("image/")) {
+            const dataUrl = await fileToDataUrl(file);
+            setAttachments((p) => [...p, { id, name: file.name, kind: "image", dataUrl }]);
+          } else if (file.type.startsWith("text/") || /\.(txt|md|json|csv)$/i.test(file.name)) {
+            const text = await readTextFile(file);
+            setAttachments((p) => [...p, { id, name: file.name, kind: "text", text }]);
+          } else {
+            toast.error(`Unsupported file: ${file.name}`);
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error(`Could not read ${file.name}`);
+        }
+      }
+    } finally {
+      setIsProcessingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeAttachment = (id: string) =>
+    setAttachments((p) => p.filter((a) => a.id !== id));
+
   const send = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || isStreaming) return;
+    if ((!trimmed && attachments.length === 0) || isStreaming) return;
 
-    const userMsg: Msg = { role: "user", content: trimmed };
+    // Build display content for user message bubble
+    const fileSummaries = attachments.map((a) => {
+      if (a.kind === "image") return `🖼️ ${a.name}`;
+      if (a.kind === "pdf") return `📄 ${a.name}`;
+      return `📝 ${a.name}`;
+    });
+    const displayContent = [
+      ...(fileSummaries.length ? [fileSummaries.join("\n")] : []),
+      trimmed,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    // Build payload content sent to the model: extracted text + images (multimodal)
+    const textParts: string[] = [];
+    for (const a of attachments) {
+      if (a.kind === "pdf" && a.text) {
+        textParts.push(`--- Job description from PDF "${a.name}" ---\n${a.text}`);
+      } else if (a.kind === "text" && a.text) {
+        textParts.push(`--- File "${a.name}" ---\n${a.text}`);
+      }
+    }
+    if (trimmed) textParts.push(trimmed);
+    const combinedText = textParts.join("\n\n") || "Please analyze the attached files.";
+
+    const images = attachments.filter((a) => a.kind === "image" && a.dataUrl);
+    const payloadUserContent: any =
+      images.length > 0
+        ? [
+            { type: "text", text: combinedText },
+            ...images.map((a) => ({
+              type: "image_url",
+              image_url: { url: a.dataUrl! },
+            })),
+          ]
+        : combinedText;
+
+    const userMsg: Msg = { role: "user", content: displayContent || combinedText };
     const isFirst = messages.length === 0;
     onMessagesChange((prev) => [...prev, userMsg]);
-    if (isFirst) onFirstUserMessage?.(trimmed);
+    if (isFirst) onFirstUserMessage?.(displayContent || trimmed || fileSummaries[0] || "New chat");
     setInput("");
+    setAttachments([]);
     setIsStreaming(true);
 
     let assistantSoFar = "";
@@ -76,13 +155,17 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
     };
 
     try {
+      const apiMessages = [
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        { role: "user", content: payloadUserContent },
+      ];
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMsg] }),
+        body: JSON.stringify({ messages: apiMessages }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -204,18 +287,68 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
 
       <div className="border-t border-border bg-background/80 backdrop-blur">
         <div className="mx-auto max-w-3xl p-4">
+          {attachments.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {attachments.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1 text-xs shadow-[var(--shadow-soft)]"
+                >
+                  {a.kind === "image" && a.dataUrl ? (
+                    <img src={a.dataUrl} alt={a.name} className="h-7 w-7 rounded object-cover" />
+                  ) : a.kind === "pdf" ? (
+                    <FileType2 className="h-4 w-4 text-primary" />
+                  ) : (
+                    <FileText className="h-4 w-4 text-primary" />
+                  )}
+                  <span className="max-w-[160px] truncate font-medium">{a.name}</span>
+                  <button
+                    onClick={() => removeAttachment(a.id)}
+                    className="ml-1 rounded-full p-0.5 hover:bg-muted"
+                    aria-label="Remove attachment"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-card p-2 shadow-[var(--shadow-soft)] focus-within:border-primary/40 focus-within:shadow-[var(--shadow-glow)] transition-all">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,application/pdf,image/*,.txt,.md,.json,.csv,text/*"
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isStreaming || isProcessingFile}
+              className="h-10 w-10 shrink-0 rounded-xl text-muted-foreground hover:text-primary"
+              title="Attach JD (PDF, image, or text)"
+              aria-label="Attach file"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Paste a job description or ask a career question…"
+              placeholder={
+                isProcessingFile
+                  ? "Reading file…"
+                  : "Paste a JD, attach a file, or ask a career question…"
+              }
               className="min-h-[52px] max-h-48 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
               disabled={isStreaming}
             />
             <Button
               onClick={() => send(input)}
-              disabled={!input.trim() || isStreaming}
+              disabled={(!input.trim() && attachments.length === 0) || isStreaming || isProcessingFile}
               size="icon"
               className="h-10 w-10 shrink-0 rounded-xl"
             >
