@@ -116,8 +116,11 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
         textParts.push(`--- File "${a.name}" ---\n${a.text}`);
       }
     }
+    const DEFAULT_ANALYZE_PROMPT =
+      "Analyze this job description. Extract key skills, responsibilities, hidden requirements, and likely interview questions. Suggest how a candidate can position themselves for this role.";
     if (trimmed) textParts.push(trimmed);
-    const combinedText = textParts.join("\n\n") || "Please analyze the attached files.";
+    else if (attachments.length > 0) textParts.push(DEFAULT_ANALYZE_PROMPT);
+    const combinedText = textParts.join("\n\n") || DEFAULT_ANALYZE_PROMPT;
 
     const images = attachments.filter((a) => a.kind === "image" && a.dataUrl);
     const payloadUserContent: any =
