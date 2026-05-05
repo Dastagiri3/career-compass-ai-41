@@ -7,10 +7,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { extractPdfText, fileToDataUrl, readTextFile, type AttachedFile } from "@/lib/extractFile";
 
-export type MsgContentPart =
-  | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string } };
-export type Msg = { role: "user" | "assistant"; content: string | MsgContentPart[] };
+export type Msg = { role: "user" | "assistant"; content: string };
 
 interface Props {
   messages: Msg[];
