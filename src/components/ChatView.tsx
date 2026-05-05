@@ -100,9 +100,10 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
       if (a.kind === "pdf") return `📄 ${a.name}`;
       return `📝 ${a.name}`;
     });
+    const autoPromptLabel = !trimmed && attachments.length > 0 ? "Analyze this job description" : "";
     const displayContent = [
       ...(fileSummaries.length ? [fileSummaries.join("\n")] : []),
-      trimmed,
+      trimmed || autoPromptLabel,
     ]
       .filter(Boolean)
       .join("\n\n");
