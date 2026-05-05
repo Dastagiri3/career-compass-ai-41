@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Send, Briefcase, FileText, Sparkles, Target, Bot, User, Paperclip, X, FileType2 } from "lucide-react";
+import { Send, Briefcase, FileText, Sparkles, Target, Bot, User, Paperclip, X, FileType2, TrendingUp, Code2, BarChart3, Megaphone, Palette, Cpu } from "lucide-react";
+import { HeroScene } from "@/components/HeroScene";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -17,28 +18,13 @@ interface Props {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
-const examples = [
-  {
-    icon: FileText,
-    title: "Analyze a JD",
-    prompt:
-      "Here's a job description, please analyze it:\n\n[Paste job description here]",
-  },
-  {
-    icon: Sparkles,
-    title: "Interview prep",
-    prompt: "Generate 10 likely interview questions for a Senior Frontend Engineer role with React and TypeScript.",
-  },
-  {
-    icon: Target,
-    title: "Resume tips",
-    prompt: "How can I tailor my resume for a Product Manager role at a SaaS startup?",
-  },
-  {
-    icon: Briefcase,
-    title: "Hidden requirements",
-    prompt: "What are the implicit skills usually expected for a Data Scientist role beyond what's listed?",
-  },
+const trendingRoles = [
+  { icon: Code2, title: "Frontend Engineer", tag: "Trending", gradient: "from-blue-500/20 to-cyan-500/20", prompt: "Generate a deep analysis & 10 likely interview questions for a Senior Frontend Engineer role (React, TypeScript, performance)." },
+  { icon: Cpu, title: "AI / ML Engineer", tag: "🔥 Hot", gradient: "from-violet-500/20 to-fuchsia-500/20", prompt: "Analyze a typical AI/ML Engineer role: required skills, hidden requirements, and likely interview questions." },
+  { icon: BarChart3, title: "Data Scientist", tag: "Trending", gradient: "from-emerald-500/20 to-teal-500/20", prompt: "What are the implicit skills usually expected for a Data Scientist role beyond what's listed in JDs?" },
+  { icon: Megaphone, title: "Product Manager", tag: "Suited for you", gradient: "from-amber-500/20 to-orange-500/20", prompt: "How can I tailor my resume and prep for a Product Manager role at a SaaS startup?" },
+  { icon: Palette, title: "UX Designer", tag: "Suited for you", gradient: "from-pink-500/20 to-rose-500/20", prompt: "Generate likely interview questions and portfolio-review tips for a Senior UX Designer role." },
+  { icon: Briefcase, title: "Paste a JD", tag: "Quick action", gradient: "from-slate-500/20 to-zinc-500/20", prompt: "Here's a job description, please analyze it:\n\n[Paste job description here]" },
 ];
 
 export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Props) {
@@ -100,9 +86,10 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
       if (a.kind === "pdf") return `📄 ${a.name}`;
       return `📝 ${a.name}`;
     });
+    const autoPromptLabel = !trimmed && attachments.length > 0 ? "Analyze this job description" : "";
     const displayContent = [
       ...(fileSummaries.length ? [fileSummaries.join("\n")] : []),
-      trimmed,
+      trimmed || autoPromptLabel,
     ]
       .filter(Boolean)
       .join("\n\n");
@@ -116,8 +103,11 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
         textParts.push(`--- File "${a.name}" ---\n${a.text}`);
       }
     }
+    const DEFAULT_ANALYZE_PROMPT =
+      "Analyze this job description. Extract key skills, responsibilities, hidden requirements, and likely interview questions. Suggest how a candidate can position themselves for this role.";
     if (trimmed) textParts.push(trimmed);
-    const combinedText = textParts.join("\n\n") || "Please analyze the attached files.";
+    else if (attachments.length > 0) textParts.push(DEFAULT_ANALYZE_PROMPT);
+    const combinedText = textParts.join("\n\n") || DEFAULT_ANALYZE_PROMPT;
 
     const images = attachments.filter((a) => a.kind === "image" && a.dataUrl);
     const payloadUserContent: any =
@@ -233,35 +223,66 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {showWelcome ? (
-          <div className="mx-auto flex h-full max-w-3xl flex-col items-center justify-center px-6 py-12 text-center">
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-glow)]">
-              <Briefcase className="h-7 w-7" />
+          <div className="relative mx-auto flex h-full w-full max-w-5xl flex-col items-center justify-center px-6 py-12">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden">
+              <HeroScene />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background" />
             </div>
-            <h1 className="mb-2 text-3xl font-bold tracking-tight md:text-4xl">
-              Hi, I'm <span className="text-primary">JDBot</span>
-            </h1>
-            <p className="mb-10 max-w-lg text-muted-foreground">
-              Paste a job description and I'll break it down — key skills, hidden requirements,
-              interview questions, and how to position your resume.
-            </p>
-            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
-              {examples.map((ex) => (
-                <button
-                  key={ex.title}
-                  onClick={() => send(ex.prompt)}
-                  className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-[var(--shadow-elegant)]"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <ex.icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold">{ex.title}</div>
-                    <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                      {ex.prompt}
+
+            <div className="relative z-10 mb-10 flex flex-col items-center text-center animate-fade-in">
+              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover-scale">
+                <Briefcase className="h-8 w-8" />
+              </div>
+              <h1 className="mb-3 text-4xl font-bold tracking-tight md:text-5xl">
+                Hi, I'm <span className="bg-gradient-to-r from-primary via-indigo-500 to-violet-500 bg-clip-text text-transparent">JDBot</span>
+              </h1>
+              <p className="max-w-xl text-muted-foreground">
+                Drop a JD — PDF, image, or text — and I'll break it down into key skills, hidden
+                requirements, interview questions, and resume tips.
+              </p>
+            </div>
+
+            <div className="relative z-10 w-full">
+              <div className="mb-3 flex items-center gap-2 px-1">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold tracking-tight">Trending & suited for you</h2>
+              </div>
+              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {trendingRoles.map((role, idx) => (
+                  <button
+                    key={role.title}
+                    onClick={() => send(role.prompt)}
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                    className={cn(
+                      "group relative overflow-hidden rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 animate-fade-in",
+                      "hover:-translate-y-1 hover:border-primary/40 hover:shadow-[var(--shadow-elegant)]",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+                        role.gradient,
+                      )}
+                    />
+                    <div className="relative flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground">
+                        <role.icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-sm font-semibold">{role.title}</div>
+                          <span className="shrink-0 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground backdrop-blur">
+                            {role.tag}
+                          </span>
+                        </div>
+                        <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                          {role.prompt}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
