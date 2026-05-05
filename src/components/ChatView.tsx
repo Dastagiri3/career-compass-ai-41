@@ -223,35 +223,66 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {showWelcome ? (
-          <div className="mx-auto flex h-full max-w-3xl flex-col items-center justify-center px-6 py-12 text-center">
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-glow)]">
-              <Briefcase className="h-7 w-7" />
+          <div className="relative mx-auto flex h-full w-full max-w-5xl flex-col items-center justify-center px-6 py-12">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden">
+              <HeroScene />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background" />
             </div>
-            <h1 className="mb-2 text-3xl font-bold tracking-tight md:text-4xl">
-              Hi, I'm <span className="text-primary">JDBot</span>
-            </h1>
-            <p className="mb-10 max-w-lg text-muted-foreground">
-              Paste a job description and I'll break it down — key skills, hidden requirements,
-              interview questions, and how to position your resume.
-            </p>
-            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
-              {examples.map((ex) => (
-                <button
-                  key={ex.title}
-                  onClick={() => send(ex.prompt)}
-                  className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-[var(--shadow-elegant)]"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <ex.icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold">{ex.title}</div>
-                    <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                      {ex.prompt}
+
+            <div className="relative z-10 mb-10 flex flex-col items-center text-center animate-fade-in">
+              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover-scale">
+                <Briefcase className="h-8 w-8" />
+              </div>
+              <h1 className="mb-3 text-4xl font-bold tracking-tight md:text-5xl">
+                Hi, I'm <span className="bg-gradient-to-r from-primary via-indigo-500 to-violet-500 bg-clip-text text-transparent">JDBot</span>
+              </h1>
+              <p className="max-w-xl text-muted-foreground">
+                Drop a JD — PDF, image, or text — and I'll break it down into key skills, hidden
+                requirements, interview questions, and resume tips.
+              </p>
+            </div>
+
+            <div className="relative z-10 w-full">
+              <div className="mb-3 flex items-center gap-2 px-1">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold tracking-tight">Trending & suited for you</h2>
+              </div>
+              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {trendingRoles.map((role, idx) => (
+                  <button
+                    key={role.title}
+                    onClick={() => send(role.prompt)}
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                    className={cn(
+                      "group relative overflow-hidden rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 animate-fade-in",
+                      "hover:-translate-y-1 hover:border-primary/40 hover:shadow-[var(--shadow-elegant)]",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+                        role.gradient,
+                      )}
+                    />
+                    <div className="relative flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground">
+                        <role.icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-sm font-semibold">{role.title}</div>
+                          <span className="shrink-0 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground backdrop-blur">
+                            {role.tag}
+                          </span>
+                        </div>
+                        <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                          {role.prompt}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
