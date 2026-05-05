@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Send, Briefcase, FileText, Sparkles, Target, Bot, User, Paperclip, X, FileType2 } from "lucide-react";
+import { Send, Briefcase, FileText, Sparkles, Target, Bot, User, Paperclip, X, FileType2, TrendingUp, Code2, BarChart3, Megaphone, Palette, Cpu } from "lucide-react";
+import { HeroScene } from "@/components/HeroScene";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
