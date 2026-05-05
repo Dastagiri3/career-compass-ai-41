@@ -18,28 +18,13 @@ interface Props {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
-const examples = [
-  {
-    icon: FileText,
-    title: "Analyze a JD",
-    prompt:
-      "Here's a job description, please analyze it:\n\n[Paste job description here]",
-  },
-  {
-    icon: Sparkles,
-    title: "Interview prep",
-    prompt: "Generate 10 likely interview questions for a Senior Frontend Engineer role with React and TypeScript.",
-  },
-  {
-    icon: Target,
-    title: "Resume tips",
-    prompt: "How can I tailor my resume for a Product Manager role at a SaaS startup?",
-  },
-  {
-    icon: Briefcase,
-    title: "Hidden requirements",
-    prompt: "What are the implicit skills usually expected for a Data Scientist role beyond what's listed?",
-  },
+const trendingRoles = [
+  { icon: Code2, title: "Frontend Engineer", tag: "Trending", gradient: "from-blue-500/20 to-cyan-500/20", prompt: "Generate a deep analysis & 10 likely interview questions for a Senior Frontend Engineer role (React, TypeScript, performance)." },
+  { icon: Cpu, title: "AI / ML Engineer", tag: "🔥 Hot", gradient: "from-violet-500/20 to-fuchsia-500/20", prompt: "Analyze a typical AI/ML Engineer role: required skills, hidden requirements, and likely interview questions." },
+  { icon: BarChart3, title: "Data Scientist", tag: "Trending", gradient: "from-emerald-500/20 to-teal-500/20", prompt: "What are the implicit skills usually expected for a Data Scientist role beyond what's listed in JDs?" },
+  { icon: Megaphone, title: "Product Manager", tag: "Suited for you", gradient: "from-amber-500/20 to-orange-500/20", prompt: "How can I tailor my resume and prep for a Product Manager role at a SaaS startup?" },
+  { icon: Palette, title: "UX Designer", tag: "Suited for you", gradient: "from-pink-500/20 to-rose-500/20", prompt: "Generate likely interview questions and portfolio-review tips for a Senior UX Designer role." },
+  { icon: Briefcase, title: "Paste a JD", tag: "Quick action", gradient: "from-slate-500/20 to-zinc-500/20", prompt: "Here's a job description, please analyze it:\n\n[Paste job description here]" },
 ];
 
 export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Props) {
