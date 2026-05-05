@@ -44,21 +44,99 @@ const examples = [
 export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Props) {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [attachments, setAttachments] = useState<AttachedFile[]>([]);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || !files.length) return;
+    setIsProcessingFile(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 20 * 1024 * 1024) {
+          toast.error(`${file.name} is too large (max 20MB).`);
+          continue;
+        }
+        const id = Math.random().toString(36).slice(2);
+        try {
+          if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+            const text = await extractPdfText(file);
+            setAttachments((p) => [...p, { id, name: file.name, kind: "pdf", text }]);
+          } else if (file.type.startsWith("image/")) {
+            const dataUrl = await fileToDataUrl(file);
+            setAttachments((p) => [...p, { id, name: file.name, kind: "image", dataUrl }]);
+          } else if (file.type.startsWith("text/") || /\.(txt|md|json|csv)$/i.test(file.name)) {
+            const text = await readTextFile(file);
+            setAttachments((p) => [...p, { id, name: file.name, kind: "text", text }]);
+          } else {
+            toast.error(`Unsupported file: ${file.name}`);
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error(`Could not read ${file.name}`);
+        }
+      }
+    } finally {
+      setIsProcessingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeAttachment = (id: string) =>
+    setAttachments((p) => p.filter((a) => a.id !== id));
+
   const send = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || isStreaming) return;
+    if ((!trimmed && attachments.length === 0) || isStreaming) return;
 
-    const userMsg: Msg = { role: "user", content: trimmed };
+    // Build display content for user message bubble
+    const fileSummaries = attachments.map((a) => {
+      if (a.kind === "image") return `🖼️ ${a.name}`;
+      if (a.kind === "pdf") return `📄 ${a.name}`;
+      return `📝 ${a.name}`;
+    });
+    const displayContent = [
+      ...(fileSummaries.length ? [fileSummaries.join("\n")] : []),
+      trimmed,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    // Build payload content sent to the model: extracted text + images (multimodal)
+    const textParts: string[] = [];
+    for (const a of attachments) {
+      if (a.kind === "pdf" && a.text) {
+        textParts.push(`--- Job description from PDF "${a.name}" ---\n${a.text}`);
+      } else if (a.kind === "text" && a.text) {
+        textParts.push(`--- File "${a.name}" ---\n${a.text}`);
+      }
+    }
+    if (trimmed) textParts.push(trimmed);
+    const combinedText = textParts.join("\n\n") || "Please analyze the attached files.";
+
+    const images = attachments.filter((a) => a.kind === "image" && a.dataUrl);
+    const payloadUserContent: any =
+      images.length > 0
+        ? [
+            { type: "text", text: combinedText },
+            ...images.map((a) => ({
+              type: "image_url",
+              image_url: { url: a.dataUrl! },
+            })),
+          ]
+        : combinedText;
+
+    const userMsg: Msg = { role: "user", content: displayContent || combinedText };
     const isFirst = messages.length === 0;
     onMessagesChange((prev) => [...prev, userMsg]);
-    if (isFirst) onFirstUserMessage?.(trimmed);
+    if (isFirst) onFirstUserMessage?.(displayContent || trimmed || fileSummaries[0] || "New chat");
     setInput("");
+    setAttachments([]);
     setIsStreaming(true);
 
     let assistantSoFar = "";
@@ -77,13 +155,17 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
     };
 
     try {
+      const apiMessages = [
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        { role: "user", content: payloadUserContent },
+      ];
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMsg] }),
+        body: JSON.stringify({ messages: apiMessages }),
       });
 
       if (!resp.ok || !resp.body) {
