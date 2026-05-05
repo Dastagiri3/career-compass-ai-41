@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Send, Briefcase, FileText, Sparkles, Target, Bot, User } from "lucide-react";
+import { Send, Briefcase, FileText, Sparkles, Target, Bot, User, Paperclip, X, Image as ImageIcon, FileType2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { extractPdfText, fileToDataUrl, readTextFile, type AttachedFile } from "@/lib/extractFile";
 
-export type Msg = { role: "user" | "assistant"; content: string };
+export type MsgContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+export type Msg = { role: "user" | "assistant"; content: string | MsgContentPart[] };
 
 interface Props {
   messages: Msg[];
