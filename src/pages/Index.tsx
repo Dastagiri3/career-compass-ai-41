@@ -61,7 +61,15 @@ const Index = () => {
       },
       (err) => {
         setLoadingChats(false);
-        toast.error("Could not load chat history: " + err.message);
+        const msg = err.message || "";
+        if (/Firestore API has not been used|SERVICE_DISABLED|PERMISSION_DENIED/i.test(msg)) {
+          toast.error(
+            "Cloud Firestore is disabled for this Firebase project. Open the Firebase console → Firestore Database → Create database, then reload.",
+            { duration: 12000 },
+          );
+        } else {
+          toast.error("Could not load chat history: " + msg);
+        }
       },
     );
     return () => unsub();
