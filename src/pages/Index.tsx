@@ -92,6 +92,13 @@ const Index = () => {
     if (activeId && conversations.some((c) => c.id === activeId)) return activeId;
     if (user) {
       const id = await createChat(user.uid, "New chat");
+      // Optimistically insert so updateMessages can find it before the
+      // Firestore snapshot arrives.
+      setConversations((prev) =>
+        prev.some((c) => c.id === id)
+          ? prev
+          : [{ id, title: "New chat", messages: [] }, ...prev],
+      );
       setActiveId(id);
       return id;
     }
@@ -104,6 +111,11 @@ const Index = () => {
   const handleNew = async () => {
     if (user) {
       const id = await createChat(user.uid, "New chat");
+      setConversations((prev) =>
+        prev.some((c) => c.id === id)
+          ? prev
+          : [{ id, title: "New chat", messages: [] }, ...prev],
+      );
       setActiveId(id);
       return;
     }
