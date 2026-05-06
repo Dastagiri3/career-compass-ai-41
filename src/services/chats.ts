@@ -55,7 +55,8 @@ export function subscribeUserChats(
   cb: (chats: ChatDoc[]) => void,
   onError?: (e: Error) => void,
 ) {
-  const q = query(chatsCol, where("uid", "==", uid), orderBy("updatedAt", "desc"));
+  // Avoid composite-index requirement: filter by uid only, sort client-side.
+  const q = query(chatsCol, where("uid", "==", uid));
   return onSnapshot(
     q,
     (snap) => {
@@ -63,6 +64,11 @@ export function subscribeUserChats(
         id: d.id,
         ...(d.data() as Omit<ChatDoc, "id">),
       }));
+      list.sort((a, b) => {
+        const at = a.updatedAt?.toMillis?.() ?? 0;
+        const bt = b.updatedAt?.toMillis?.() ?? 0;
+        return bt - at;
+      });
       cb(list);
     },
     (err) => {

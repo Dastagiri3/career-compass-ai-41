@@ -40,6 +40,14 @@ const Index = () => {
     } catch {}
   }, [conversations, user]);
 
+  // Reset state when auth identity changes (avoid stale guest/local activeId
+  // pointing to a non-existent Firestore doc, which causes permission-denied
+  // on update).
+  useEffect(() => {
+    setActiveId(null);
+    setConversations([]);
+  }, [user?.uid]);
+
   // Signed-in: subscribe to Firestore
   useEffect(() => {
     if (!user) return;
