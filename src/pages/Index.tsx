@@ -40,6 +40,14 @@ const Index = () => {
     } catch {}
   }, [conversations, user]);
 
+  // Reset state when auth identity changes (avoid stale guest/local activeId
+  // pointing to a non-existent Firestore doc, which causes permission-denied
+  // on update).
+  useEffect(() => {
+    setActiveId(null);
+    setConversations([]);
+  }, [user?.uid]);
+
   // Signed-in: subscribe to Firestore
   useEffect(() => {
     if (!user) return;
@@ -84,6 +92,13 @@ const Index = () => {
     if (activeId && conversations.some((c) => c.id === activeId)) return activeId;
     if (user) {
       const id = await createChat(user.uid, "New chat");
+      // Optimistically insert so updateMessages can find it before the
+      // Firestore snapshot arrives.
+      setConversations((prev) =>
+        prev.some((c) => c.id === id)
+          ? prev
+          : [{ id, title: "New chat", messages: [] }, ...prev],
+      );
       setActiveId(id);
       return id;
     }
@@ -96,6 +111,11 @@ const Index = () => {
   const handleNew = async () => {
     if (user) {
       const id = await createChat(user.uid, "New chat");
+      setConversations((prev) =>
+        prev.some((c) => c.id === id)
+          ? prev
+          : [{ id, title: "New chat", messages: [] }, ...prev],
+      );
       setActiveId(id);
       return;
     }
