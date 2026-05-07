@@ -83,51 +83,54 @@ describe("Chat e2e (guest mode)", () => {
     });
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1), { timeout: 3000 });
-    // allow stream to flush
-    await new Promise((r) => setTimeout(r, 200));
-    // Wait for streaming to populate the conversation
+
+    // Wait for streamed assistant content + user content to be persisted to localStorage.
     await waitFor(
       () => {
         const raw = localStorage.getItem("jdbot.guest.chats");
-        const parsed = raw ? JSON.parse(raw) : [];
-        const msgs = parsed[0]?.messages ?? [];
-        // eslint-disable-next-line no-console
-        if (msgs.length < 2) console.log("DEBUG msgs", JSON.stringify(parsed));
-        expect(msgs.length).toBeGreaterThanOrEqual(2);
+        expect(raw).toBeTruthy();
+        const parsed = JSON.parse(raw!);
+        const all = parsed.flatMap((c: any) => c.messages ?? []);
+        expect(
+          all.some(
+            (m: any) =>
+              m.role === "user" && m.content.includes("frontend role"),
+          ),
+        ).toBe(true);
+        expect(
+          all.some(
+            (m: any) =>
+              m.role === "assistant" && m.content.includes("Hello world!"),
+          ),
+        ).toBe(true);
       },
       { timeout: 5000 },
     );
 
-    // Streamed assistant content renders (markdown may split text nodes)
+    // Streamed assistant content renders in the DOM
     await waitFor(() =>
       expect(
         screen.getByText((_, el) => el?.textContent === "Hello world!"),
       ).toBeInTheDocument(),
     );
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-
-    // Persistence check: the guest store writes to localStorage; remount and verify.
-    await waitFor(() => {
-      const raw = localStorage.getItem("jdbot.guest.chats");
-      expect(raw).toBeTruthy();
-      const parsed = JSON.parse(raw!);
-      expect(parsed.length).toBeGreaterThan(0);
-      expect(parsed[0].messages.some((m: any) => m.role === "assistant")).toBe(true);
-    });
-
-    // Simulate a "refresh" by unmounting and rendering again.
+    // --- Refresh simulation: unmount and remount; persisted chats should rehydrate. ---
     unmount();
     render(<Index />);
 
-    // The user message and streamed assistant response should still be visible.
-    expect(
-      await screen.findByText(
-        (_, el) => el?.textContent === "What skills for a frontend role?",
-      ),
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText((_, el) => el?.textContent === "Hello world!"),
-    ).toBeInTheDocument();
+    // After "refresh", both messages must still be visible somewhere in the UI.
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          (_, el) => el?.textContent === "What skills for a frontend role?",
+        ),
+      ).toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByText((_, el) => el?.textContent === "Hello world!"),
+      ).toBeInTheDocument(),
+    );
   });
 });
+
