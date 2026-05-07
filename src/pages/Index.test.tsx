@@ -83,7 +83,13 @@ describe("Chat e2e (guest mode)", () => {
     });
 
     // User bubble appears
-    expect(await screen.findByText("What skills for a frontend role?")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          (_, el) => el?.textContent === "What skills for a frontend role?",
+        ),
+      ).toBeInTheDocument(),
+    );
 
     // Streamed assistant content renders (markdown may split text nodes)
     await waitFor(() =>
