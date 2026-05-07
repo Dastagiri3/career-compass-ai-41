@@ -74,13 +74,11 @@ describe("Chat e2e (guest mode)", () => {
     const textarea = await screen.findByPlaceholderText(/Paste a JD/i);
     await user.type(textarea, "What skills for a frontend role?");
 
-    const sendBtn = screen.getByRole("button", { name: /^$/i, hidden: true }).parentElement; // fallback
-    // Better: query by the Send icon's button — it's the only enabled submit-style button next to textarea
-    const buttons = screen.getAllByRole("button");
-    const send = buttons.find(
-      (b) => b.querySelector("svg.lucide-send") || (b as HTMLButtonElement).type === "submit",
-    ) ?? buttons[buttons.length - 1];
-    await user.click(send!);
+    const sendBtn = screen
+      .getAllByRole("button")
+      .find((b) => b.querySelector("svg.lucide-send"));
+    expect(sendBtn).toBeTruthy();
+    await user.click(sendBtn!);
 
     // User bubble appears
     expect(await screen.findByText("What skills for a frontend role?")).toBeInTheDocument();
