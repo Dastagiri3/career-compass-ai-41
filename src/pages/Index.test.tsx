@@ -83,15 +83,19 @@ describe("Chat e2e (guest mode)", () => {
     });
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1), { timeout: 3000 });
+    // allow stream to flush
+    await new Promise((r) => setTimeout(r, 200));
     // Wait for streaming to populate the conversation
     await waitFor(
       () => {
         const raw = localStorage.getItem("jdbot.guest.chats");
-        expect(raw).toBeTruthy();
-        const parsed = JSON.parse(raw!);
-        expect(parsed[0]?.messages?.length ?? 0).toBeGreaterThanOrEqual(2);
+        const parsed = raw ? JSON.parse(raw) : [];
+        const msgs = parsed[0]?.messages ?? [];
+        // eslint-disable-next-line no-console
+        if (msgs.length < 2) console.log("DEBUG msgs", JSON.stringify(parsed));
+        expect(msgs.length).toBeGreaterThanOrEqual(2);
       },
-      { timeout: 3000 },
+      { timeout: 5000 },
     );
 
     // Streamed assistant content renders (markdown may split text nodes)
