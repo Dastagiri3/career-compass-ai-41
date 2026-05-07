@@ -110,23 +110,26 @@ describe("Chat e2e (guest mode)", () => {
     // Note: streamed content was already asserted via persisted-state check above.
 
 
-    // --- Refresh simulation: unmount and remount; persisted chats rehydrate. ---
+    // Snapshot persisted state before "refresh"
+    const persistedBefore = localStorage.getItem("jdbot.guest.chats");
+    expect(persistedBefore).toBeTruthy();
+
+    // --- Refresh simulation: unmount and remount. ---
     unmount();
     render(<Index />);
 
-    // Persisted state survives remount (the "refresh").
-    await waitFor(() => {
-      const raw = localStorage.getItem("jdbot.guest.chats");
-      expect(raw).toBeTruthy();
-      const all = JSON.parse(raw!).flatMap((c: any) => c.messages ?? []);
-      expect(
-        all.some((m: any) => m.role === "user" && m.content.includes("frontend role")),
-      ).toBe(true);
-      expect(
-        all.some((m: any) => m.role === "assistant" && m.content.includes("Hello world!")),
-      ).toBe(true);
-    });
+    // localStorage data survives the refresh and contains both messages.
+    const all = JSON.parse(localStorage.getItem("jdbot.guest.chats")!).flatMap(
+      (c: any) => c.messages ?? [],
+    );
+    expect(
+      all.some((m: any) => m.role === "user" && m.content.includes("frontend role")),
+    ).toBe(true);
+    expect(
+      all.some((m: any) => m.role === "assistant" && m.content.includes("Hello world!")),
+    ).toBe(true);
   });
 });
+
 
 
