@@ -107,6 +107,8 @@ describe("Chat e2e (guest mode)", () => {
 
     // The user message and streamed assistant response should still be visible.
     expect(await screen.findByText("What skills for a frontend role?")).toBeInTheDocument();
-    expect(await screen.findByText(/Hello\s+world!/)).toBeInTheDocument();
+    expect(
+      await screen.findByText((_, el) => el?.textContent === "Hello world!"),
+    ).toBeInTheDocument();
   });
 });
