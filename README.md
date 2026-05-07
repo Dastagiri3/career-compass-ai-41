@@ -58,3 +58,13 @@ career-compass-ai-41/
 ├── prompts/             # System prompts for AI
 ├── types/               # TypeScript definitions
 └── README.md
+
+🤝 Contributing
+Contributions, issues, and feature requests are welcome!
+Feel free to check the issues page.
+📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
+📬 Contact
+Dastagiri Jillela
+
+GitHub: @Dastagiri3
