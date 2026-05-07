@@ -71,13 +71,15 @@ describe("Chat e2e (guest mode)", () => {
 
     const textarea = (await screen.findByPlaceholderText(/Paste a JD/i)) as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: "What skills for a frontend role?" } });
+    expect(textarea.value).toBe("What skills for a frontend role?");
 
     const sendBtn = screen
       .getAllByRole("button")
-      .find((b) => b.querySelector(".lucide-send"));
+      .find((b) => b.querySelector(".lucide-send")) as HTMLButtonElement;
     expect(sendBtn).toBeTruthy();
+    expect(sendBtn.disabled).toBe(false);
     await act(async () => {
-      fireEvent.click(sendBtn!);
+      fireEvent.click(sendBtn);
     });
 
     // User bubble appears
