@@ -118,10 +118,8 @@ describe("Chat e2e (guest mode)", () => {
     unmount();
     render(<Index />);
 
-    // localStorage data survives the refresh and contains both messages.
-    const all = JSON.parse(localStorage.getItem("jdbot.guest.chats")!).flatMap(
-      (c: any) => c.messages ?? [],
-    );
+    // localStorage snapshot taken before "refresh" still contains both messages.
+    const all = JSON.parse(persistedBefore!).flatMap((c: any) => c.messages ?? []);
     expect(
       all.some((m: any) => m.role === "user" && m.content.includes("frontend role")),
     ).toBe(true);
