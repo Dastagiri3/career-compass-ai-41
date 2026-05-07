@@ -21,9 +21,9 @@ Live Demo: [https://career-compass-ai-41.vercel.app](https://career-compass-ai-4
 ## 🛠 Tech Stack
 
 - **Frontend**: Next.js / React (Vercel deployment)
-- **Backend**: [Node.js, Python/FastAPI, etc.]
-- **AI/ML**: [OpenAI GPT models, Grok, Claude, or local LLMs]
-- **Database**: [e.g., MongoDB, PostgreSQL, Supabase, etc.]
+- **Backend**: Node.js, Python/FastAPI
+- **AI/ML**: OpenAI GPT models, Grok, Claude, or local LLMs
+- **Database**: Firebase, PostgreSQL, Supabase 
 - **Styling**: Tailwind CSS
 - **Deployment**: Vercel
 
@@ -49,3 +49,12 @@ cp .env.example .env.local
 
 # Run the development server
 npm run dev
+
+career-compass-ai-41/
+├── app/                 # Next.js App Router
+├── components/          # Reusable UI components
+├── lib/                 # Utilities & AI integrations
+├── public/              # Static assets
+├── prompts/             # System prompts for AI
+├── types/               # TypeScript definitions
+└── README.md
