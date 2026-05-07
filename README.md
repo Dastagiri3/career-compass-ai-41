@@ -21,8 +21,8 @@ Live Demo: [https://career-compass-ai-41.vercel.app](https://career-compass-ai-4
 ## 🛠 Tech Stack
 
 - **Frontend**: Next.js / React (Vercel deployment)
-- **Backend**: [Your backend tech — e.g., Node.js, Python/FastAPI, etc.]
-- **AI/ML**: [e.g., OpenAI GPT models, Grok, Claude, or local LLMs]
+- **Backend**: [Node.js, Python/FastAPI, etc.]
+- **AI/ML**: [OpenAI GPT models, Grok, Claude, or local LLMs]
 - **Database**: [e.g., MongoDB, PostgreSQL, Supabase, etc.]
 - **Styling**: Tailwind CSS
 - **Deployment**: Vercel
