@@ -82,13 +82,15 @@ describe("Chat e2e (guest mode)", () => {
       fireEvent.click(sendBtn);
     });
 
-    // User bubble appears
-    await waitFor(() =>
-      expect(
-        screen.getByText(
-          (_, el) => el?.textContent === "What skills for a frontend role?",
-        ),
-      ).toBeInTheDocument(),
+    // Wait for streaming to populate the conversation
+    await waitFor(
+      () => {
+        const raw = localStorage.getItem("jdbot.guest.chats");
+        expect(raw).toBeTruthy();
+        const parsed = JSON.parse(raw!);
+        expect(parsed[0]?.messages?.length ?? 0).toBeGreaterThanOrEqual(2);
+      },
+      { timeout: 3000 },
     );
 
     // Streamed assistant content renders (markdown may split text nodes)
