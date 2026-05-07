@@ -82,6 +82,7 @@ describe("Chat e2e (guest mode)", () => {
       fireEvent.click(sendBtn);
     });
 
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1), { timeout: 3000 });
     // Wait for streaming to populate the conversation
     await waitFor(
       () => {
