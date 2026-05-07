@@ -67,17 +67,18 @@ describe("Chat e2e (guest mode)", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const user = userEvent.setup();
     const { unmount } = render(<Index />);
 
-    const textarea = await screen.findByPlaceholderText(/Paste a JD/i);
-    await user.type(textarea, "What skills for a frontend role?");
+    const textarea = (await screen.findByPlaceholderText(/Paste a JD/i)) as HTMLTextAreaElement;
+    fireEvent.change(textarea, { target: { value: "What skills for a frontend role?" } });
 
     const sendBtn = screen
       .getAllByRole("button")
-      .find((b) => b.querySelector("svg.lucide-send"));
+      .find((b) => b.querySelector(".lucide-send"));
     expect(sendBtn).toBeTruthy();
-    await user.click(sendBtn!);
+    await act(async () => {
+      fireEvent.click(sendBtn!);
+    });
 
     // User bubble appears
     expect(await screen.findByText("What skills for a frontend role?")).toBeInTheDocument();
