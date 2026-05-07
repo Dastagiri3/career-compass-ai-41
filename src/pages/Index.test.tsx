@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor, cleanup } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, waitFor, cleanup, fireEvent, act } from "@testing-library/react";
 
 // --- Mocks (must be declared before importing the component) ---
 vi.mock("@/hooks/useAuth", () => ({
