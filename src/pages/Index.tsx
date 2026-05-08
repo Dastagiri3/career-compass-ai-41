@@ -22,6 +22,7 @@ const Index = () => {
   const [conversations, setConversations] = useState<ConvState[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loadingChats, setLoadingChats] = useState(false);
+  const [guestHydrated, setGuestHydrated] = useState(false);
   const skipNextSync = useRef(false);
   const activeIdRef = useRef<string | null>(null);
   const conversationsRef = useRef<ConvState[]>([]);
@@ -36,11 +37,9 @@ const Index = () => {
   const setConversationState = (
     next: ConvState[] | ((prev: ConvState[]) => ConvState[]),
   ) => {
-    setConversations((prev) => {
-      const resolved = typeof next === "function" ? next(prev) : next;
-      conversationsRef.current = resolved;
-      return resolved;
-    });
+    const resolved = typeof next === "function" ? next(conversationsRef.current) : next;
+    conversationsRef.current = resolved;
+    setConversations(resolved);
   };
 
   useEffect(() => {
@@ -52,19 +51,24 @@ const Index = () => {
 
   // Guest mode: persist to localStorage
   useEffect(() => {
-    if (user || authLoading) return;
+    if (authLoading) return;
+    if (user) {
+      setGuestHydrated(false);
+      return;
+    }
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
       if (raw) setConversationState(JSON.parse(raw));
     } catch {}
+    setGuestHydrated(true);
   }, [user, authLoading]);
 
   useEffect(() => {
-    if (user || authLoading) return;
+    if (user || authLoading || !guestHydrated) return;
     try {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(conversations));
     } catch {}
-  }, [conversations, user, authLoading]);
+  }, [conversations, user, authLoading, guestHydrated]);
 
   // Reset state when auth identity changes (avoid stale guest/local activeId
   // pointing to a non-existent Firestore doc, which causes permission-denied
