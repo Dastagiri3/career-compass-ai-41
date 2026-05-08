@@ -196,12 +196,14 @@ const Index = () => {
 
   const handleFirstUserMessage = async (text: string) => {
     const title = text.length > 40 ? text.slice(0, 40).trim() + "…" : text;
+    const id = activeIdRef.current;
+    if (!id) return;
     setConversations((prev) =>
-      prev.map((c) => (c.id === activeId ? { ...c, title } : c)),
+      prev.map((c) => (c.id === id ? { ...c, title } : c)),
     );
-    if (user && activeId) {
+    if (user) {
       try {
-        await updateChat(activeId, { title });
+        await updateChat(id, { title });
       } catch (e) {
         console.error(e);
       }
