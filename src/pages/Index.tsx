@@ -137,10 +137,6 @@ const Index = () => {
     const promise = (async () => {
       if (user) {
         const id = await createChat(user.uid, "New chat");
-        activeIdRef.current = id;
-        conversationsRef.current = conversationsRef.current.some((c) => c.id === id)
-          ? conversationsRef.current
-          : [{ id, title: "New chat", messages: [] }, ...conversationsRef.current];
         setConversationState((prev) =>
           prev.some((c) => c.id === id)
             ? prev
@@ -150,11 +146,6 @@ const Index = () => {
         return id;
       }
       const id = newId();
-      activeIdRef.current = id;
-      conversationsRef.current = [
-        { id, title: "New chat", messages: [] },
-        ...conversationsRef.current,
-      ];
       setConversationState((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
       setActiveConversationId(id);
       return id;
