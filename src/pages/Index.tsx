@@ -98,11 +98,26 @@ const Index = () => {
         if (skipNextSync.current) {
           skipNextSync.current = false;
         }
-        const nextConversations = docs.map((d) => ({
+        const remoteConversations = docs.map((d) => {
+          const local = conversationsRef.current.find((c) => c.id === d.id);
+          const remoteMessages = d.messages ?? [];
+          return {
             id: d.id,
-            title: d.title || "New chat",
-            messages: d.messages ?? [],
-          }));
+            title:
+              (d.title && d.title !== "New chat") || !local || local.title === "New chat"
+                ? d.title || "New chat"
+                : local.title,
+            messages:
+              local && local.messages.length > remoteMessages.length
+                ? local.messages
+                : remoteMessages,
+          };
+        });
+        const activeLocal = conversationsRef.current.find((c) => c.id === activeIdRef.current);
+        const nextConversations =
+          activeLocal && !remoteConversations.some((c) => c.id === activeLocal.id)
+            ? [activeLocal, ...remoteConversations]
+            : remoteConversations;
         setConversationState(nextConversations);
       },
       (err) => {
