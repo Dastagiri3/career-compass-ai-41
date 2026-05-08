@@ -104,12 +104,6 @@ const Index = () => {
             messages: d.messages ?? [],
           }));
         setConversationState(nextConversations);
-        if (
-          activeIdRef.current &&
-          !nextConversations.some((c) => c.id === activeIdRef.current)
-        ) {
-          setActiveConversationId(null);
-        }
       },
       (err) => {
         setLoadingChats(false);
