@@ -23,6 +23,16 @@ const Index = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loadingChats, setLoadingChats] = useState(false);
   const skipNextSync = useRef(false);
+  const activeIdRef = useRef<string | null>(null);
+  const conversationsRef = useRef<ConvState[]>([]);
+  const ensureActivePromiseRef = useRef<Promise<string> | null>(null);
+
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
 
   // Guest mode: persist to localStorage
   useEffect(() => {
