@@ -171,20 +171,20 @@ const Index = () => {
   const handleNew = async () => {
     if (user) {
       const id = await createChat(user.uid, "New chat");
-      setConversations((prev) =>
+      setConversationState((prev) =>
         prev.some((c) => c.id === id)
           ? prev
           : [{ id, title: "New chat", messages: [] }, ...prev],
       );
-      setActiveId(id);
+      setActiveConversationId(id);
       return;
     }
     const id = newId();
-    setConversations((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
-    setActiveId(id);
+    setConversationState((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
+    setActiveConversationId(id);
   };
 
-  const handleSelect = (id: string) => setActiveId(id);
+  const handleSelect = (id: string) => setActiveConversationId(id);
 
   const handleDelete = async (id: string) => {
     if (user) {
@@ -195,15 +195,15 @@ const Index = () => {
         return;
       }
     } else {
-      setConversations((prev) => prev.filter((c) => c.id !== id));
+      setConversationState((prev) => prev.filter((c) => c.id !== id));
     }
-    if (activeId === id) setActiveId(null);
+    if (activeIdRef.current === id) setActiveConversationId(null);
   };
 
   const updateMessages = async (updater: (prev: Msg[]) => Msg[]) => {
     const id = await ensureActive();
     let nextMessages: Msg[] = [];
-    setConversations((prev) =>
+    setConversationState((prev) =>
       prev.map((c) => {
         if (c.id !== id) return c;
         nextMessages = updater(c.messages);
@@ -228,7 +228,7 @@ const Index = () => {
     const title = text.length > 40 ? text.slice(0, 40).trim() + "…" : text;
     const id = activeIdRef.current;
     if (!id) return;
-    setConversations((prev) =>
+    setConversationState((prev) =>
       prev.map((c) => (c.id === id ? { ...c, title } : c)),
     );
     if (user) {
