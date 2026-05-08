@@ -22,10 +22,25 @@ const Index = () => {
   const [conversations, setConversations] = useState<ConvState[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loadingChats, setLoadingChats] = useState(false);
+  const [guestHydrated, setGuestHydrated] = useState(false);
   const skipNextSync = useRef(false);
   const activeIdRef = useRef<string | null>(null);
   const conversationsRef = useRef<ConvState[]>([]);
   const ensureActivePromiseRef = useRef<Promise<string> | null>(null);
+  const authIdentityRef = useRef<string | null | undefined>(undefined);
+
+  const setActiveConversationId = (id: string | null) => {
+    activeIdRef.current = id;
+    setActiveId(id);
+  };
+
+  const setConversationState = (
+    next: ConvState[] | ((prev: ConvState[]) => ConvState[]),
+  ) => {
+    const resolved = typeof next === "function" ? next(conversationsRef.current) : next;
+    conversationsRef.current = resolved;
+    setConversations(resolved);
+  };
 
   useEffect(() => {
     activeIdRef.current = activeId;
@@ -36,27 +51,41 @@ const Index = () => {
 
   // Guest mode: persist to localStorage
   useEffect(() => {
-    if (user || authLoading) return;
+    if (authLoading) return;
+    if (user) {
+      setGuestHydrated(false);
+      return;
+    }
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
-      if (raw) setConversations(JSON.parse(raw));
+      if (raw) setConversationState(JSON.parse(raw));
     } catch {}
+    setGuestHydrated(true);
   }, [user, authLoading]);
 
   useEffect(() => {
-    if (user) return;
+    if (user || authLoading || !guestHydrated) return;
     try {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(conversations));
     } catch {}
-  }, [conversations, user]);
+  }, [conversations, user, authLoading, guestHydrated]);
 
   // Reset state when auth identity changes (avoid stale guest/local activeId
   // pointing to a non-existent Firestore doc, which causes permission-denied
   // on update).
   useEffect(() => {
-    setActiveId(null);
-    setConversations([]);
-  }, [user?.uid]);
+    if (authLoading) return;
+    const uid = user?.uid ?? null;
+    if (authIdentityRef.current === undefined) {
+      authIdentityRef.current = uid;
+      return;
+    }
+    if (authIdentityRef.current !== uid) {
+      authIdentityRef.current = uid;
+      setActiveConversationId(null);
+      setConversationState([]);
+    }
+  }, [user?.uid, authLoading]);
 
   // Signed-in: subscribe to Firestore
   useEffect(() => {
@@ -69,13 +98,27 @@ const Index = () => {
         if (skipNextSync.current) {
           skipNextSync.current = false;
         }
-        setConversations(
-          docs.map((d) => ({
+        const remoteConversations = docs.map((d) => {
+          const local = conversationsRef.current.find((c) => c.id === d.id);
+          const remoteMessages = d.messages ?? [];
+          return {
             id: d.id,
-            title: d.title || "New chat",
-            messages: d.messages ?? [],
-          })),
-        );
+            title:
+              (d.title && d.title !== "New chat") || !local || local.title === "New chat"
+                ? d.title || "New chat"
+                : local.title,
+            messages:
+              local && local.messages.length > remoteMessages.length
+                ? local.messages
+                : remoteMessages,
+          };
+        });
+        const activeLocal = conversationsRef.current.find((c) => c.id === activeIdRef.current);
+        const nextConversations =
+          activeLocal && !remoteConversations.some((c) => c.id === activeLocal.id)
+            ? [activeLocal, ...remoteConversations]
+            : remoteConversations;
+        setConversationState(nextConversations);
       },
       (err) => {
         setLoadingChats(false);
@@ -109,26 +152,17 @@ const Index = () => {
     const promise = (async () => {
       if (user) {
         const id = await createChat(user.uid, "New chat");
-        activeIdRef.current = id;
-        conversationsRef.current = conversationsRef.current.some((c) => c.id === id)
-          ? conversationsRef.current
-          : [{ id, title: "New chat", messages: [] }, ...conversationsRef.current];
-        setConversations((prev) =>
+        setConversationState((prev) =>
           prev.some((c) => c.id === id)
             ? prev
             : [{ id, title: "New chat", messages: [] }, ...prev],
         );
-        setActiveId(id);
+        setActiveConversationId(id);
         return id;
       }
       const id = newId();
-      activeIdRef.current = id;
-      conversationsRef.current = [
-        { id, title: "New chat", messages: [] },
-        ...conversationsRef.current,
-      ];
-      setConversations((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
-      setActiveId(id);
+      setConversationState((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
+      setActiveConversationId(id);
       return id;
     })();
     ensureActivePromiseRef.current = promise;
@@ -141,20 +175,20 @@ const Index = () => {
   const handleNew = async () => {
     if (user) {
       const id = await createChat(user.uid, "New chat");
-      setConversations((prev) =>
+      setConversationState((prev) =>
         prev.some((c) => c.id === id)
           ? prev
           : [{ id, title: "New chat", messages: [] }, ...prev],
       );
-      setActiveId(id);
+      setActiveConversationId(id);
       return;
     }
     const id = newId();
-    setConversations((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
-    setActiveId(id);
+    setConversationState((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
+    setActiveConversationId(id);
   };
 
-  const handleSelect = (id: string) => setActiveId(id);
+  const handleSelect = (id: string) => setActiveConversationId(id);
 
   const handleDelete = async (id: string) => {
     if (user) {
@@ -165,15 +199,15 @@ const Index = () => {
         return;
       }
     } else {
-      setConversations((prev) => prev.filter((c) => c.id !== id));
+      setConversationState((prev) => prev.filter((c) => c.id !== id));
     }
-    if (activeId === id) setActiveId(null);
+    if (activeIdRef.current === id) setActiveConversationId(null);
   };
 
   const updateMessages = async (updater: (prev: Msg[]) => Msg[]) => {
     const id = await ensureActive();
     let nextMessages: Msg[] = [];
-    setConversations((prev) =>
+    setConversationState((prev) =>
       prev.map((c) => {
         if (c.id !== id) return c;
         nextMessages = updater(c.messages);
@@ -198,7 +232,7 @@ const Index = () => {
     const title = text.length > 40 ? text.slice(0, 40).trim() + "…" : text;
     const id = activeIdRef.current;
     if (!id) return;
-    setConversations((prev) =>
+    setConversationState((prev) =>
       prev.map((c) => (c.id === id ? { ...c, title } : c)),
     );
     if (user) {
