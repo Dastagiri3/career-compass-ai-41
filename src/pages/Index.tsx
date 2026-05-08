@@ -26,6 +26,22 @@ const Index = () => {
   const activeIdRef = useRef<string | null>(null);
   const conversationsRef = useRef<ConvState[]>([]);
   const ensureActivePromiseRef = useRef<Promise<string> | null>(null);
+  const authIdentityRef = useRef<string | null | undefined>(undefined);
+
+  const setActiveConversationId = (id: string | null) => {
+    activeIdRef.current = id;
+    setActiveId(id);
+  };
+
+  const setConversationState = (
+    next: ConvState[] | ((prev: ConvState[]) => ConvState[]),
+  ) => {
+    setConversations((prev) => {
+      const resolved = typeof next === "function" ? next(prev) : next;
+      conversationsRef.current = resolved;
+      return resolved;
+    });
+  };
 
   useEffect(() => {
     activeIdRef.current = activeId;
@@ -39,24 +55,33 @@ const Index = () => {
     if (user || authLoading) return;
     try {
       const raw = localStorage.getItem(LOCAL_KEY);
-      if (raw) setConversations(JSON.parse(raw));
+      if (raw) setConversationState(JSON.parse(raw));
     } catch {}
   }, [user, authLoading]);
 
   useEffect(() => {
-    if (user) return;
+    if (user || authLoading) return;
     try {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(conversations));
     } catch {}
-  }, [conversations, user]);
+  }, [conversations, user, authLoading]);
 
   // Reset state when auth identity changes (avoid stale guest/local activeId
   // pointing to a non-existent Firestore doc, which causes permission-denied
   // on update).
   useEffect(() => {
-    setActiveId(null);
-    setConversations([]);
-  }, [user?.uid]);
+    if (authLoading) return;
+    const uid = user?.uid ?? null;
+    if (authIdentityRef.current === undefined) {
+      authIdentityRef.current = uid;
+      return;
+    }
+    if (authIdentityRef.current !== uid) {
+      authIdentityRef.current = uid;
+      setActiveConversationId(null);
+      setConversationState([]);
+    }
+  }, [user?.uid, authLoading]);
 
   // Signed-in: subscribe to Firestore
   useEffect(() => {
