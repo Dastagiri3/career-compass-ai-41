@@ -23,6 +23,16 @@ const Index = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loadingChats, setLoadingChats] = useState(false);
   const skipNextSync = useRef(false);
+  const activeIdRef = useRef<string | null>(null);
+  const conversationsRef = useRef<ConvState[]>([]);
+  const ensureActivePromiseRef = useRef<Promise<string> | null>(null);
+
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
 
   // Guest mode: persist to localStorage
   useEffect(() => {
@@ -88,24 +98,44 @@ const Index = () => {
     [conversations, activeId],
   );
 
-  const ensureActive = async (): Promise<string> => {
-    if (activeId && conversations.some((c) => c.id === activeId)) return activeId;
-    if (user) {
-      const id = await createChat(user.uid, "New chat");
-      // Optimistically insert so updateMessages can find it before the
-      // Firestore snapshot arrives.
-      setConversations((prev) =>
-        prev.some((c) => c.id === id)
-          ? prev
-          : [{ id, title: "New chat", messages: [] }, ...prev],
-      );
+  const ensureActive = (): Promise<string> => {
+    // De-dupe concurrent calls within a single send() so we don't create
+    // multiple chats for the user message + streaming chunks.
+    if (ensureActivePromiseRef.current) return ensureActivePromiseRef.current;
+    const currentId = activeIdRef.current;
+    if (currentId && conversationsRef.current.some((c) => c.id === currentId)) {
+      return Promise.resolve(currentId);
+    }
+    const promise = (async () => {
+      if (user) {
+        const id = await createChat(user.uid, "New chat");
+        activeIdRef.current = id;
+        conversationsRef.current = conversationsRef.current.some((c) => c.id === id)
+          ? conversationsRef.current
+          : [{ id, title: "New chat", messages: [] }, ...conversationsRef.current];
+        setConversations((prev) =>
+          prev.some((c) => c.id === id)
+            ? prev
+            : [{ id, title: "New chat", messages: [] }, ...prev],
+        );
+        setActiveId(id);
+        return id;
+      }
+      const id = newId();
+      activeIdRef.current = id;
+      conversationsRef.current = [
+        { id, title: "New chat", messages: [] },
+        ...conversationsRef.current,
+      ];
+      setConversations((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
       setActiveId(id);
       return id;
-    }
-    const id = newId();
-    setConversations((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
-    setActiveId(id);
-    return id;
+    })();
+    ensureActivePromiseRef.current = promise;
+    promise.finally(() => {
+      ensureActivePromiseRef.current = null;
+    });
+    return promise;
   };
 
   const handleNew = async () => {
@@ -150,6 +180,11 @@ const Index = () => {
         return { ...c, messages: nextMessages };
       }),
     );
+    // Keep ref in sync immediately so back-to-back calls within the same
+    // tick see the latest messages.
+    conversationsRef.current = conversationsRef.current.map((c) =>
+      c.id === id ? { ...c, messages: nextMessages } : c,
+    );
     if (user) {
       try {
         await updateChat(id, { messages: nextMessages });
@@ -161,12 +196,14 @@ const Index = () => {
 
   const handleFirstUserMessage = async (text: string) => {
     const title = text.length > 40 ? text.slice(0, 40).trim() + "…" : text;
+    const id = activeIdRef.current;
+    if (!id) return;
     setConversations((prev) =>
-      prev.map((c) => (c.id === activeId ? { ...c, title } : c)),
+      prev.map((c) => (c.id === id ? { ...c, title } : c)),
     );
-    if (user && activeId) {
+    if (user) {
       try {
-        await updateChat(activeId, { title });
+        await updateChat(id, { title });
       } catch (e) {
         console.error(e);
       }
