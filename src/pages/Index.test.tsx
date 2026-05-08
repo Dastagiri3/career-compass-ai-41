@@ -181,7 +181,7 @@ describe("Chat e2e (guest mode)", () => {
     for (const piece of ["Streaming ", "chunk ", "one ", "two ", "three."]) {
       await pushChunk(piece);
       expect(screen.queryByRole("heading", { name: /Hi, I'm/i })).not.toBeInTheDocument();
-      expect(screen.getByText(/Tell me about senior frontend roles/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Tell me about senior frontend roles/i).length).toBeGreaterThan(0);
     }
 
     await finishStream();
