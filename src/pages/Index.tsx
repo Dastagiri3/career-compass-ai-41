@@ -94,13 +94,18 @@ const Index = () => {
         if (skipNextSync.current) {
           skipNextSync.current = false;
         }
-        setConversations(
-          docs.map((d) => ({
+        const nextConversations = docs.map((d) => ({
             id: d.id,
             title: d.title || "New chat",
             messages: d.messages ?? [],
-          })),
-        );
+          }));
+        setConversationState(nextConversations);
+        if (
+          activeIdRef.current &&
+          !nextConversations.some((c) => c.id === activeIdRef.current)
+        ) {
+          setActiveConversationId(null);
+        }
       },
       (err) => {
         setLoadingChats(false);
@@ -138,12 +143,12 @@ const Index = () => {
         conversationsRef.current = conversationsRef.current.some((c) => c.id === id)
           ? conversationsRef.current
           : [{ id, title: "New chat", messages: [] }, ...conversationsRef.current];
-        setConversations((prev) =>
+        setConversationState((prev) =>
           prev.some((c) => c.id === id)
             ? prev
             : [{ id, title: "New chat", messages: [] }, ...prev],
         );
-        setActiveId(id);
+        setActiveConversationId(id);
         return id;
       }
       const id = newId();
@@ -152,8 +157,8 @@ const Index = () => {
         { id, title: "New chat", messages: [] },
         ...conversationsRef.current,
       ];
-      setConversations((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
-      setActiveId(id);
+      setConversationState((prev) => [{ id, title: "New chat", messages: [] }, ...prev]);
+      setActiveConversationId(id);
       return id;
     })();
     ensureActivePromiseRef.current = promise;
