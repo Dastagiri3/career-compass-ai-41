@@ -250,7 +250,9 @@ const Index = () => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <JDSidebar
-          conversations={conversations.map(({ id, title }) => ({ id, title }))}
+          conversations={conversations
+            .filter((c) => c.id === activeId || (c.title && c.title !== "New chat"))
+            .map(({ id, title }) => ({ id, title }))}
           activeId={activeId}
           onSelect={handleSelect}
           onNew={handleNew}
