@@ -32,22 +32,37 @@ Smart job matching assistance
 The application offers an intuitive and responsive user experience with a modern web interface optimized for desktop and mobile devices.
 
 ✨ Features
+
 🎯 AI Career Guidance
+
 Get personalized career suggestions based on skills, interests, and career goals.
+
 📄 Resume Analyzer
+
 Upload and analyze resumes to receive AI-generated improvement suggestions.
+
 🧠 Skill Gap Analysis
+
 Identify missing skills required for target job roles and receive learning recommendations.
+
 💼 Job Matching
+
 Discover career opportunities aligned with your profile and expertise.
+
 🎤 Interview Preparation
+
 Practice with AI-generated interview questions and preparation guidance.
+
 📈 Career Roadmaps
+
 Receive structured learning paths and career growth strategies.
+
 🌐 Responsive UI
+
 Modern and mobile-friendly interface for seamless user experience.
 
 🛠️ Tech Stack
+
 Frontend
 
 
