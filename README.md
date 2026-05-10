@@ -104,10 +104,23 @@ Vercel
 
 
 📂 Project Structure
-career-compass-ai-41/│── public/│── src/│   ├── components/│   ├── pages/│   ├── assets/│   ├── services/│   ├── utils/│   └── App.js││── package.json│── tailwind.config.js│── README.md
+career-compass-ai-41/
+│── public/
+│── src/
+├── components/   
+├── pages/   
+├── assets/  
+├── services/
+├── utils/   
+└── App.js
+│── package.json/
+│── tailwind.config.js/
+│── README.md
 
 🚀 Getting Started
+
 Prerequisites
+
 Make sure you have installed:
 
 
@@ -119,21 +132,30 @@ npm or yarn
 
 
 Installation
+
 Clone the repository:
+
 git clone https://github.com/Dastagiri3/career-compass-ai-41.git
+
 Navigate into the project directory:
+
 cd career-compass-ai-41
+
 Install dependencies:
+
 npm install
 
 Run the Development Server
+
 npm run dev
+
 or
+
 npm start
-The app will run locally at:
-http://localhost:3000
+
 
 🌍 Live Demo
+
 Check out the deployed application here:
 👉 Career Compass AI Demo
 
