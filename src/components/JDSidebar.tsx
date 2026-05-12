@@ -1,4 +1,5 @@
-import { Briefcase, Plus, MessageSquare, Sparkles, FileText, Trash2, LogIn, LogOut } from "lucide-react";
+import { Plus, MessageSquare, Sparkles, FileText, Trash2, LogIn, LogOut } from "lucide-react";
+import jdbotLogo from "@/assets/jdbot-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -77,8 +78,8 @@ export function JDSidebar({ conversations, activeId, onSelect, onNew, onDelete }
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-2 py-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[var(--shadow-elegant)]">
-            <Briefcase className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary shadow-[var(--shadow-elegant)] overflow-hidden">
+            <img src={jdbotLogo} alt="JDBot logo" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
