@@ -5,7 +5,7 @@ An AI-powered career guidance platform that helps users discover career paths, a
 🌐 Live Demo: https://career-compass-ai-41.vercel.app/
 
 
-💻 GitHub Repository: Career Compass AI Repository
+💻 GitHub Repository: https://github.com/Dastagiri3/career-compass-ai-41.git
 
 📌 Overview
 Career Compass AI is designed to act as a personal AI career assistant for students, fresh graduates, and professionals. The platform leverages modern AI technologies to provide:
