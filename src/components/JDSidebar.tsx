@@ -125,7 +125,14 @@ export function JDSidebar({ conversations, activeId, onSelect, onNew, onDelete }
               <SidebarMenu>
                 {quickPrompts.map((p) => (
                   <SidebarMenuItem key={p.label}>
-                    <SidebarMenuButton className="text-muted-foreground">
+                    <SidebarMenuButton
+                      className="text-muted-foreground"
+                      onClick={() => {
+                        window.dispatchEvent(
+                          new CustomEvent("jdbot:prompt", { detail: p.prompt }),
+                        );
+                      }}
+                    >
                       <p.icon className="h-4 w-4" />
                       <span>{p.label}</span>
                     </SidebarMenuButton>
