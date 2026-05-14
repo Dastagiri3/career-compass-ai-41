@@ -285,10 +285,26 @@ const Index = () => {
                   Job description analyst & interview coach
                 </p>
               </div>
-              <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground sm:flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                {user ? "Synced" : "Guest"}
-              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                  title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                  className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </Button>
+                <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground sm:flex">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {user ? "Synced" : "Guest"}
+                </span>
+              </div>
             </div>
           </header>
           <main className="flex-1 overflow-hidden">
