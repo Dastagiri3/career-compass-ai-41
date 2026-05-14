@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { JDSidebar, type Conversation } from "@/components/JDSidebar";
 import { ChatView, type Msg } from "@/components/ChatView";
