@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { JDSidebar, type Conversation } from "@/components/JDSidebar";
 import { ChatView, type Msg } from "@/components/ChatView";
@@ -28,6 +30,18 @@ const Index = () => {
   const conversationsRef = useRef<ConvState[]>([]);
   const ensureActivePromiseRef = useRef<Promise<string> | null>(null);
   const authIdentityRef = useRef<string | null | undefined>(undefined);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const stored = localStorage.getItem("jdbot.theme");
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("jdbot.theme", theme);
+  }, [theme]);
 
   const setActiveConversationId = (id: string | null) => {
     activeIdRef.current = id;
@@ -271,10 +285,26 @@ const Index = () => {
                   Job description analyst & interview coach
                 </p>
               </div>
-              <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground sm:flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                {user ? "Synced" : "Guest"}
-              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                  title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                  className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </Button>
+                <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground sm:flex">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {user ? "Synced" : "Guest"}
+                </span>
+              </div>
             </div>
           </header>
           <main className="flex-1 overflow-hidden">

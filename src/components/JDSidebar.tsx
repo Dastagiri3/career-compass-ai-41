@@ -65,9 +65,24 @@ interface Props {
 }
 
 const quickPrompts = [
-  { icon: FileText, label: "Analyze a JD" },
-  { icon: Sparkles, label: "Interview questions" },
-  { icon: MessageSquare, label: "Resume tips" },
+  {
+    icon: FileText,
+    label: "Analyze a JD",
+    prompt:
+      "I'd like to analyze a job description. Here it is:\n\n[Paste the job description here]\n\nPlease extract key skills, responsibilities, hidden requirements, and likely interview questions.",
+  },
+  {
+    icon: Sparkles,
+    label: "Interview questions",
+    prompt:
+      "Generate a list of 10 likely interview questions (mix of technical, behavioural, and situational) for the role I'm preparing for. Ask me which role if you need clarification.",
+  },
+  {
+    icon: MessageSquare,
+    label: "Resume tips",
+    prompt:
+      "Give me actionable resume tips to stand out for the role I'm targeting. Include structure, wording, metrics, and ATS-friendly suggestions.",
+  },
 ];
 
 export function JDSidebar({ conversations, activeId, onSelect, onNew, onDelete }: Props) {
@@ -110,7 +125,14 @@ export function JDSidebar({ conversations, activeId, onSelect, onNew, onDelete }
               <SidebarMenu>
                 {quickPrompts.map((p) => (
                   <SidebarMenuItem key={p.label}>
-                    <SidebarMenuButton className="text-muted-foreground">
+                    <SidebarMenuButton
+                      className="text-muted-foreground"
+                      onClick={() => {
+                        window.dispatchEvent(
+                          new CustomEvent("jdbot:prompt", { detail: p.prompt }),
+                        );
+                      }}
+                    >
                       <p.icon className="h-4 w-4" />
                       <span>{p.label}</span>
                     </SidebarMenuButton>

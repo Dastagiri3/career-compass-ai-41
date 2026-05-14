@@ -39,6 +39,17 @@ export function ChatView({ messages, onMessagesChange, onFirstUserMessage }: Pro
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (typeof detail === "string" && detail.trim()) {
+        setInput(detail);
+      }
+    };
+    window.addEventListener("jdbot:prompt", handler);
+    return () => window.removeEventListener("jdbot:prompt", handler);
+  }, []);
+
   const handleFiles = async (files: FileList | null) => {
     if (!files || !files.length) return;
     setIsProcessingFile(true);
