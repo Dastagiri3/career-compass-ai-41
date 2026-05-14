@@ -30,6 +30,18 @@ const Index = () => {
   const conversationsRef = useRef<ConvState[]>([]);
   const ensureActivePromiseRef = useRef<Promise<string> | null>(null);
   const authIdentityRef = useRef<string | null | undefined>(undefined);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const stored = localStorage.getItem("jdbot.theme");
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("jdbot.theme", theme);
+  }, [theme]);
 
   const setActiveConversationId = (id: string | null) => {
     activeIdRef.current = id;
